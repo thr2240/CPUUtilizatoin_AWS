@@ -17,6 +17,7 @@ import (
 
 func UploadFile(s *session.Session, bucketName string, objectKey string, payload [][]string) error {
 	body := ""
+
 	for _, row := range payload {
 		for i := 0; i < len(row); i++ {
 			body = body + row[i]
@@ -27,6 +28,8 @@ func UploadFile(s *session.Session, bucketName string, objectKey string, payload
 			}
 		}
 	}
+	
+	fmt.Println(body)
 
 	_, err := s3.New(s).PutObject(&s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
@@ -52,7 +55,7 @@ func HandleRequest() {
 	if err != nil {
 		fmt.Println("Error", err)
 	}
-	fmt.Println("Success1")
+
 	var payload [][]string
 
 	payload = append(payload, []string{"EC2Instance", "CPUUtilization", "AccountID", "Region", "TimeStamp"})
@@ -62,13 +65,13 @@ func HandleRequest() {
 
 	startTime := aws.Time(time.Now().UTC().Add(time.Second * -3600 * 24))
 	endTime := aws.Time(time.Now().UTC())
-
+	
 	for _, region := range regions.Regions {
 		// Create new EC2 client
 		regionName := *region.RegionName
 		// fmt.Println(regionName)
-		regionConf := aws.NewConfig().WithRegion(regionName)
 
+		regionConf := aws.NewConfig().WithRegion(regionName)
 		client = ec2.New(sess, regionConf)
 		cw := cloudwatch.New(sess, regionConf)
 		stsConn := sts.New(sess, regionConf)
@@ -95,10 +98,12 @@ func HandleRequest() {
 				}
 				// fmt.Printf("InstanceID: %v State: %v\n", *i.InstanceId, i.State.Name)
 				resp, err := cw.GetMetricStatistics(&search)
-
+				
 				if err != nil {
 					fmt.Println("Error", err)
 				}
+
+				fmt.Println(resp)
 
 				// fmt.Println(resp.Datapoints)
 				outCallerIdentity, err := stsConn.GetCallerIdentity(&sts.GetCallerIdentityInput{})
@@ -125,10 +130,11 @@ func HandleRequest() {
 		}
 	}
 
-	err = UploadFile(sess, "monitoring-v0-test", "CPUUtilization.csv", payload)
+	err = UploadFile(sess, "monitoring-v0-mytest", "CPUUtilization.csv", payload)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
+	fmt.Println("Upload Finished")
 }
 
 func main() {
