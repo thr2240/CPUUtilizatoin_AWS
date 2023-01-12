@@ -62,9 +62,15 @@ func HandleRequest() {
 
 	var period int64
 	period = 3600
+	
+	t := time.Now()
+	rounded := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).UTC()
 
-	startTime := aws.Time(time.Now().UTC().Add(time.Second * -3600 * 24))
-	endTime := aws.Time(time.Now().UTC())
+	startTime := aws.Time(rounded.Add(time.Second * -3600 * 24))
+	endTime := aws.Time(rounded.Add(time.Second * -3600 * 1))
+	
+	// fmt.Println("startTime", startTime)
+	// fmt.Println("endTime", endTime)
 	
 	for _, region := range regions.Regions {
 		// Create new EC2 client
@@ -130,7 +136,7 @@ func HandleRequest() {
 		}
 	}
 
-	err = UploadFile(sess, "monitoring-v0-mytest", "CPUUtilization.csv", payload)
+	err = UploadFile(sess, "mytestbucket-cpuutil", "CPUUtilization.csv", payload)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
