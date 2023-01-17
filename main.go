@@ -135,8 +135,8 @@ func HandleRequest() {
 			}
 		}
 	}
-
-	err = UploadFile(sess, "mytestbucket-cpuutil", "CPUUtilization.csv", payload)
+	uploadFileName := fmt.Sprintf("CPUUtilization%02v.%02v.%v.csv", int(rounded.Month()), rounded.Day(), rounded.Year())
+	err = UploadFile(sess, "monitoring-v0-test-new-files-per-day", uploadFileName, payload)
 	if err != nil {
 		fmt.Println("Error", err)
 	}
